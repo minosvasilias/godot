@@ -57,6 +57,10 @@ public:
 	void _post_event(Variant p_event);
 	void _record_purchase(String product_id);
 
+	Dictionary get_receipt();
+	void request_review();
+	Error refresh_receipt();
+
 	static InAppStore *get_singleton();
 
 	InAppStore();
