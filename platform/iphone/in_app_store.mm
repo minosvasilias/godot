@@ -390,7 +390,8 @@ Dictionary InAppStore::get_receipt(){
 	bool sandbox = url_string.find("sandboxReceipt") >= 0;
 	print_line(String("appstorereceipturl: ") + url_string + ", sandbox: " + Variant(sandbox));
 	data = [NSData dataWithContentsOfURL:url];
-	NSString *receipt = [data base64EncodedStringWithOptions:0];
+	//NSString *receipt = [data base64EncodedStringWithOptions:0];
+	NSString *receipt = [self base64forData:data];
 
 	Dictionary res;
 	res["receipt"] = receipt;
