@@ -393,7 +393,7 @@ Dictionary InAppStore::get_receipt(){
 	NSString *receipt = [data base64EncodedStringWithOptions:0];
 
 	Dictionary res;
-	res["receipt"] = receipt;
+	res["receipt"] = String::utf8([receipt UTF8String]);
 	res["sandbox"] = sandbox;
 	return res;
 
