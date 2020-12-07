@@ -71,6 +71,8 @@ void InAppStore::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("finish_transaction"), &InAppStore::finish_transaction);
 	ClassDB::bind_method(D_METHOD("set_auto_finish_transaction"), &InAppStore::set_auto_finish_transaction);
 	ClassDB::bind_method(D_METHOD("request_review"), &InAppStore::request_review);
+	ClassDB::bind_method(D_METHOD("get_receipt"), &InAppStore::get_receipt);
+	ClassDB::bind_method(D_METHOD("refresh_receipt"), &InAppStore::refresh_receipt);
 };
 
 @interface ProductsDelegate : NSObject <SKProductsRequestDelegate> {
@@ -334,6 +336,69 @@ void InAppStore::finish_transaction(String product_id) {
 void InAppStore::set_auto_finish_transaction(bool b) {
 	auto_finish_transactions = b;
 }
+
+
+
+//CUSTOM ADDITIONS
+
+
+@interface ReceiptRestoreDelegate : NSObject <SKRequestDelegate> {
+};
+@end
+
+@implementation ReceiptRestoreDelegate
+
+- (void)requestDidFinish:(SKRequest *)request {
+	Dictionary ret;
+	ret["type"] = "receipt_restored";
+	ret["result"] = "ok";
+	InAppStore::get_singleton()->_post_event(ret);
+
+};
+
+- (void)request:(SKRequest *)request didFailWithError:(NSError *)error {
+	Dictionary ret;
+	ret["type"] = "receipt_restored";
+	ret["result"] = "error";
+	ret["error"] = String::utf8([error.localizedDescription UTF8String]);
+	InAppStore::get_singleton()->_post_event(ret);
+};
+
+@end
+
+Error InAppStore::refresh_receipt() {
+
+	printf("restoring purchases!\n");
+	ReceiptRestoreDelegate *delegate = [[ReceiptRestoreDelegate alloc] init] ;
+	SKReceiptRefreshRequest *request = [[SKReceiptRefreshRequest alloc] init];
+	request.delegate = delegate;
+	[request start];
+
+
+
+	//[[SKPaymentQueue defaultQueue] restoreCompletedTransactions];
+
+	return OK;
+};
+
+
+Dictionary InAppStore::get_receipt(){
+	NSData *data = nil;
+	NSBundle *bundle = [NSBundle mainBundle];
+	NSURL *url = [bundle appStoreReceiptURL];
+	String url_string = String([[url absoluteString] UTF8String]);
+	bool sandbox = url_string.find("sandboxReceipt") >= 0;
+	print_line(String("appstorereceipturl: ") + url_string + ", sandbox: " + Variant(sandbox));
+	data = [NSData dataWithContentsOfURL:url];
+	NSString *receipt = [data base64EncodedString];
+
+	Dictionary res;
+	res["receipt"] = receipt;
+	res["sandbox"] = sandbox;
+	return res;
+
+}
+
 
 void InAppStore::request_review() {
 	 if([SKStoreReviewController class]) {
