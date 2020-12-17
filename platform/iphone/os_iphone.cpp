@@ -164,6 +164,11 @@ Error OSIPhone::initialize(const VideoMode &p_desired, int p_video_driver, int p
 
 	input = memnew(InputDefault);
 
+#ifdef GAME_CENTER_ENABLED
+	game_center = memnew(GameCenter);
+	Engine::get_singleton()->add_singleton(Engine::Singleton("GameCenter", game_center));
+	game_center->connect();
+#endif
 
 #ifdef STOREKIT_ENABLED
 	store_kit = memnew(InAppStore);
@@ -356,6 +361,9 @@ void OSIPhone::finalize() {
 	memdelete(input);
 	memdelete(ios);
 
+#ifdef GAME_CENTER_ENABLED
+	memdelete(game_center);
+#endif
 
 #ifdef STOREKIT_ENABLED
 	memdelete(store_kit);
